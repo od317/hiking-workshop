@@ -8,7 +8,8 @@ declare const schema: z.ZodObject<{
     PORT: z.ZodDefault<z.ZodCoercedNumber<unknown>>;
     DATABASE_URL: z.ZodString;
     JWT_ACCESS_SECRET: z.ZodString;
-    JWT_REFRESH_SECRET: z.ZodString;
+    ACCESS_TTL_SECONDS: z.ZodDefault<z.ZodCoercedNumber<unknown>>;
+    REFRESH_TTL_DAYS: z.ZodDefault<z.ZodCoercedNumber<unknown>>;
     S3_ENDPOINT: z.ZodString;
     S3_REGION: z.ZodString;
     S3_BUCKET: z.ZodString;
@@ -21,7 +22,8 @@ export declare const validateEnv: (config: Record<string, unknown>) => {
     PORT: number;
     DATABASE_URL: string;
     JWT_ACCESS_SECRET: string;
-    JWT_REFRESH_SECRET: string;
+    ACCESS_TTL_SECONDS: number;
+    REFRESH_TTL_DAYS: number;
     S3_ENDPOINT: string;
     S3_REGION: string;
     S3_BUCKET: string;

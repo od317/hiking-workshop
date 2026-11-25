@@ -1,10 +1,14 @@
 import { randomUUID } from 'crypto';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
-import { HealthController } from './health/health.controller';
+import { AuthModule } from './auth/auth.module';
 import { validateEnv } from './config/env';
+import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
@@ -18,10 +22,14 @@ import { PrismaModule } from './prisma/prisma.module';
           const header = req.headers['x-request-id'];
           return (Array.isArray(header) ? header[0] : header) ?? randomUUID();
         },
+        redact: ['req.headers.authorization'],
       },
     }),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
+    AuthModule,
   ],
   controllers: [HealthController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

@@ -10,9 +10,12 @@ exports.AppModule = void 0;
 const crypto_1 = require("crypto");
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const core_1 = require("@nestjs/core");
+const throttler_1 = require("@nestjs/throttler");
 const nestjs_pino_1 = require("nestjs-pino");
-const health_controller_1 = require("./health/health.controller");
+const auth_module_1 = require("./auth/auth.module");
 const env_1 = require("./config/env");
+const health_controller_1 = require("./health/health.controller");
 const prisma_module_1 = require("./prisma/prisma.module");
 let AppModule = class AppModule {
 };
@@ -30,11 +33,15 @@ exports.AppModule = AppModule = __decorate([
                         const header = req.headers['x-request-id'];
                         return (Array.isArray(header) ? header[0] : header) ?? (0, crypto_1.randomUUID)();
                     },
+                    redact: ['req.headers.authorization'],
                 },
             }),
+            throttler_1.ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
             prisma_module_1.PrismaModule,
+            auth_module_1.AuthModule,
         ],
         controllers: [health_controller_1.HealthController],
+        providers: [{ provide: core_1.APP_GUARD, useClass: throttler_1.ThrottlerGuard }],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map
