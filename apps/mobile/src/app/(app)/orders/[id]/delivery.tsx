@@ -14,11 +14,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { FulfillmentSummary } from "@/lib/api";
 import { ApiError, apiFetch } from "@/lib/api-client";
+import { StepHeader } from "@/components/step-header";
 
 type ActionMode = "FINISH" | "QC" | "DELIVER" | "RETURN";
 
 export default function OrderDeliveryScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, step } = useLocalSearchParams<{
+    id: string;
+    step?: "FINISHING" | "FINAL_CHECK" | "DELIVERY";
+  }>();
   const qc = useQueryClient();
 
   const [active, setActive] = useState<{
@@ -104,6 +108,7 @@ export default function OrderDeliveryScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <StepHeader orderId={id} stepType={step ?? "DELIVERY"} />
       {data.lines.length === 0 ? (
         <Text style={styles.empty}>أضف أسطر الإنتاج أولاً من شاشة القص</Text>
       ) : (

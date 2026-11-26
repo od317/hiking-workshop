@@ -15,6 +15,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ProductionBoard } from "@/lib/api";
 import { STEP_LABELS } from "@/lib/step-labels";
 import { ApiError, apiFetch } from "@/lib/api-client";
+import { StepHeader } from "@/components/step-header";
 
 export default function OrderProductionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -171,6 +172,7 @@ export default function OrderProductionScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <StepHeader orderId={id} stepType="CUTTING" />
       {/* TOTALS BAR */}
       <View style={styles.totalsRow}>
         <View style={styles.statBox}>

@@ -15,9 +15,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Material, MaterialKind, OrderMaterial } from "@/lib/api";
 import { ApiError, apiFetch } from "@/lib/api-client";
+import { StepHeader } from "@/components/step-header";
 
 export default function OrderMaterialsScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, step } = useLocalSearchParams<{
+    id: string;
+    step?: "CLOTH" | "ACCESSORIES";
+  }>();
   const qc = useQueryClient();
 
   const [mode, setMode] = useState<"CATALOG" | "CUSTOM">("CATALOG");
@@ -90,6 +94,7 @@ export default function OrderMaterialsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <StepHeader orderId={id} stepType={step ?? "CLOTH"} />
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>إضافة مادة للطلب</Text>
 

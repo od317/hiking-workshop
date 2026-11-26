@@ -26,3 +26,22 @@ export const STATUS_COLORS: Record<OrderStepStatus, string> = {
   BLOCKED: "#dc2626",
   SKIPPED: "#6b7280",
 };
+
+export function getStepRoute(orderId: string, stepType: OrderStepType): string {
+  switch (stepType) {
+    case "PATTERN":
+    case "SAMPLE":
+      return `/(app)/orders/${orderId}/design?step=${stepType}`;
+    case "ACCESSORIES":
+    case "CLOTH":
+      return `/(app)/orders/${orderId}/materials?step=${stepType}`;
+    case "CUTTING":
+      return `/(app)/orders/${orderId}/production?step=${stepType}`;
+    case "WORKSHOP":
+      return `/(app)/orders/${orderId}/workshops?step=${stepType}`;
+    case "FINISHING":
+    case "FINAL_CHECK":
+    case "DELIVERY":
+      return `/(app)/orders/${orderId}/delivery?step=${stepType}`;
+  }
+}

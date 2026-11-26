@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
+import { StepHeader } from "@/components/step-header";
 import { OrderDetail } from "@/lib/api";
 import { ApiError, apiFetch } from "@/lib/api-client";
 
@@ -28,7 +28,10 @@ const SAMPLE_STATUS_COLORS = {
 } as const;
 
 export default function OrderDesignScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, step } = useLocalSearchParams<{
+    id: string;
+    step?: "PATTERN" | "SAMPLE";
+  }>();
   const qc = useQueryClient();
 
   const [patternNote, setPatternNote] = useState("");
@@ -115,6 +118,7 @@ export default function OrderDesignScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <StepHeader orderId={id} stepType={step ?? "PATTERN"} />
       {/* PATTERNS SECTION */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
@@ -149,7 +153,6 @@ export default function OrderDesignScreen() {
           ))
         )}
       </View>
-
       {/* SAMPLES SECTION */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>

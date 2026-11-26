@@ -1,6 +1,8 @@
+import { useAuthStore } from "@/store/auth.store";
 import { tokenStorage } from "./token-storage";
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
+export const API_URL = BASE_URL;
 
 export class ApiError extends Error {
   constructor(
@@ -94,5 +96,41 @@ export async function apiFetch<T>(
   }
 
   if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
+}
+
+export async function apiUpload<T>(
+  path: string,
+  formData: FormData,
+  isRetry = false,
+): Promise<T> {
+  const token = await tokenStorage.getAccessToken();
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    // Don't set Content-Type: React Native adds the multipart boundary.
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  console.log;
+  if (res.status === 401 && !isRetry) {
+    const newToken = await refreshAccessToken();
+    if (newToken) return apiUpload<T>(path, formData, true);
+  }
+
+  if (!res.ok) {
+    const text = await res.text();
+    let message = "تعذر رفع الصورة";
+    try {
+      const data = JSON.parse(text);
+      message = Array.isArray(data?.message)
+        ? data.message.join("\n")
+        : data?.message || message;
+    } catch {
+      if (text) message = text;
+    }
+    throw new ApiError(res.status, message);
+  }
+
   return (await res.json()) as T;
 }

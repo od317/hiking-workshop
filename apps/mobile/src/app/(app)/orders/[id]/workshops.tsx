@@ -14,6 +14,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ProductionBoard, Workshop, WorkshopBatch } from "@/lib/api";
 import { ApiError, apiFetch } from "@/lib/api-client";
+import { StepHeader } from "@/components/step-header";
 
 export default function OrderWorkshopsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -100,6 +101,7 @@ export default function OrderWorkshopsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <StepHeader orderId={id} stepType="WORKSHOP" />
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>إرسال دفعة للمشغل</Text>
 
