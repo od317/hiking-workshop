@@ -7,13 +7,15 @@ export default function AppLayout() {
       <Stack.Screen name="orders/new" options={{ title: "طلب جديد" }} />
       <Stack.Screen name="orders/[id]" options={{ title: "تفاصيل الطلب" }} />
       <Stack.Screen
-        name="orders/[id]/design"
-        options={{ title: "الباترون والعينة" }}
+        name="orders/[id]/pattern"
+        options={{ title: "الباترون" }}
       />
+      <Stack.Screen name="orders/[id]/sample" options={{ title: "العينة" }} />
       <Stack.Screen
-        name="orders/[id]/materials"
-        options={{ title: "القماش والإكسسوارات" }}
+        name="orders/[id]/accessories"
+        options={{ title: "الإكسسوارات" }}
       />
+      <Stack.Screen name="orders/[id]/cloth" options={{ title: "القماش" }} />
       <Stack.Screen
         name="orders/[id]/production"
         options={{ title: "القص والإنتاج" }}

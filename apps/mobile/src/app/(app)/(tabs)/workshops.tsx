@@ -2,228 +2,336 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  FlatList,
   Pressable,
-  RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { Workshop } from "@/lib/api";
+import { ProductionBoard, Workshop, WorkshopBatch } from "@/lib/api";
 import { ApiError, apiFetch } from "@/lib/api-client";
+import { StepHeader } from "@/components/step-header";
 
-export default function WorkshopsTab() {
+export default function OrderWorkshopsScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const qc = useQueryClient();
-  const [showForm, setShowForm] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
 
-  const [payingId, setPayingId] = useState<string | null>(null);
-  const [payAmount, setPayAmount] = useState("");
-  const [payNote, setPayNote] = useState("");
+  const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const [selectedWorkshopId, setSelectedWorkshopId] = useState<string | null>(
+    null,
+  );
+  const [sentQty, setSentQty] = useState("");
+  const [ratePerPiece, setRatePerPiece] = useState("");
+  const [sendNote, setSendNote] = useState("");
 
-  const { data, isLoading, isRefetching, refetch } = useQuery({
+  const [receivingBatchId, setReceivingBatchId] = useState<string | null>(null);
+  const [receiveQty, setReceiveQty] = useState("");
+  const [receiveNote, setReceiveNote] = useState("");
+
+  const { data: batches, isLoading } = useQuery({
+    queryKey: ["order-batches", id],
+    queryFn: () => apiFetch<WorkshopBatch[]>(`/orders/${id}/workshop-batches`),
+    enabled: Boolean(id),
+  });
+
+  const { data: board } = useQuery({
+    queryKey: ["production", id],
+    queryFn: () => apiFetch<ProductionBoard>(`/orders/${id}/production`),
+    enabled: Boolean(id),
+  });
+
+  const { data: workshops } = useQuery({
     queryKey: ["workshops"],
     queryFn: () => apiFetch<Workshop[]>("/workshops"),
   });
 
-  const createWorkshop = useMutation({
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["order-batches", id] });
+    qc.invalidateQueries({ queryKey: ["workshops"] });
+    qc.invalidateQueries({ queryKey: ["order", id] });
+  };
+
+  const sendBatch = useMutation({
     mutationFn: () =>
-      apiFetch<Workshop>("/workshops", {
+      apiFetch(`/orders/${id}/workshop-batches`, {
         method: "POST",
-        body: { name: name.trim(), phone: phone.trim() || undefined },
+        body: {
+          orderLineId: selectedLineId,
+          workshopId: selectedWorkshopId,
+          sentQty: Number(sentQty),
+          ratePerPieceMinor: Number(ratePerPiece) || 0,
+          note: sendNote.trim() || undefined,
+        },
       }),
     onSuccess: () => {
-      setName("");
-      setPhone("");
-      setShowForm(false);
-      qc.invalidateQueries({ queryKey: ["workshops"] });
+      setSentQty("");
+      setRatePerPiece("");
+      setSendNote("");
+      invalidate();
     },
     onError: (err) => {
       Alert.alert(
-        "خطأ",
-        err instanceof ApiError ? err.message : "تعذر الإضافة",
+        "تعذر الإرسال",
+        err instanceof ApiError ? err.message : "حدث خطأ",
       );
     },
   });
 
-  const recordPayment = useMutation({
-    mutationFn: (vars: { id: string; amountMinor: number; note?: string }) =>
-      apiFetch(`/workshops/${vars.id}/payments`, {
+  const receiveBatch = useMutation({
+    mutationFn: (vars: { batchId: string; quantity: number; note?: string }) =>
+      apiFetch(`/workshop-batches/${vars.batchId}/receive`, {
         method: "POST",
-        body: { amountMinor: vars.amountMinor, note: vars.note },
+        body: { quantity: vars.quantity, note: vars.note },
       }),
     onSuccess: () => {
-      setPayingId(null);
-      setPayAmount("");
-      setPayNote("");
-      qc.invalidateQueries({ queryKey: ["workshops"] });
+      setReceivingBatchId(null);
+      setReceiveQty("");
+      setReceiveNote("");
+      invalidate();
     },
     onError: (err) => {
-      Alert.alert("خطأ", err instanceof ApiError ? err.message : "تعذر الدفع");
+      Alert.alert(
+        "تعذر الاستلام",
+        err instanceof ApiError ? err.message : "حدث خطأ",
+      );
     },
   });
 
+  const canSend =
+    Boolean(selectedLineId && selectedWorkshopId) && Number(sentQty) > 0;
+
   return (
-    <View style={styles.container}>
-      <View style={styles.topRow}>
-        <Text style={styles.headerText}>المشاغل الخارجية</Text>
-        <Pressable style={styles.addBtn} onPress={() => setShowForm((v) => !v)}>
-          <Text style={styles.btnText}>{showForm ? "إغلاق" : "+ مشغل"}</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <StepHeader orderId={id} stepType="WORKSHOP" />
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>إرسال دفعة للمشغل</Text>
+
+        <Text style={styles.label}>اختر اللون والمقاس:</Text>
+        <View style={styles.chipWrap}>
+          {(board?.lines ?? []).map((l) => {
+            const active = l.id === selectedLineId;
+            return (
+              <Pressable
+                key={l.id}
+                style={[styles.chip, active && styles.chipActive]}
+                onPress={() => setSelectedLineId(l.id)}
+              >
+                <Text
+                  style={[styles.chipText, active && styles.chipTextActive]}
+                >
+                  {l.color} ({l.size}) — مقصوص: {l.cutQty}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Text style={styles.label}>اختر المشغل:</Text>
+        <View style={styles.chipWrap}>
+          {(workshops ?? []).map((w) => {
+            const active = w.id === selectedWorkshopId;
+            return (
+              <Pressable
+                key={w.id}
+                style={[styles.chip, active && styles.chipActive]}
+                onPress={() => setSelectedWorkshopId(w.id)}
+              >
+                <Text
+                  style={[styles.chipText, active && styles.chipTextActive]}
+                >
+                  {w.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="العدد المرسل"
+            value={sentQty}
+            onChangeText={setSentQty}
+            keyboardType="numeric"
+            textAlign="right"
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="أجرة القطعة"
+            value={ratePerPiece}
+            onChangeText={setRatePerPiece}
+            keyboardType="numeric"
+            textAlign="right"
+          />
+        </View>
+
+        <TextInput
+          style={styles.input}
+          placeholder="ملاحظة على الدفعة (اختياري)"
+          value={sendNote}
+          onChangeText={setSendNote}
+          textAlign="right"
+        />
+
+        <Pressable
+          style={[
+            styles.primaryBtn,
+            (!canSend || sendBatch.isPending) && { opacity: 0.5 },
+          ]}
+          disabled={!canSend || sendBatch.isPending}
+          onPress={() => sendBatch.mutate()}
+        >
+          <Text style={styles.btnText}>إرسال للمشغل</Text>
         </Pressable>
       </View>
 
-      {showForm ? (
-        <View style={styles.card}>
-          <TextInput
-            style={styles.input}
-            placeholder="اسم المشغل"
-            value={name}
-            onChangeText={setName}
-            textAlign="right"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="الهاتف (اختياري)"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            textAlign="right"
-          />
-          <Pressable
-            style={[
-              styles.primaryBtn,
-              (!name.trim() || createWorkshop.isPending) && { opacity: 0.5 },
-            ]}
-            disabled={!name.trim() || createWorkshop.isPending}
-            onPress={() => createWorkshop.mutate()}
-          >
-            <Text style={styles.btnText}>حفظ المشغل</Text>
-          </Pressable>
-        </View>
-      ) : null}
+      <Text style={styles.sectionTitle}>
+        الدفعات المرسلة ({batches?.length ?? 0})
+      </Text>
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} size="large" />
+        <ActivityIndicator />
       ) : (
-        <FlatList
-          data={data ?? []}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-          }
-          ListEmptyComponent={
-            <Text style={styles.empty}>لا توجد مشاغل بعد</Text>
-          }
-          renderItem={({ item }) => {
-            const isPaying = payingId === item.id;
-            return (
-              <View style={styles.card}>
-                <View style={styles.rowBetween}>
-                  <View>
-                    <Text style={styles.title}>{item.name}</Text>
-                    {item.phone ? (
-                      <Text style={styles.meta}>{item.phone}</Text>
-                    ) : null}
-                  </View>
-                  <View style={{ alignItems: "flex-end", gap: 4 }}>
-                    <Text style={styles.balance}>
-                      الرصيد: {item.balanceMinor.toLocaleString()}
-                    </Text>
-                    <Pressable
-                      onPress={() => setPayingId(isPaying ? null : item.id)}
-                    >
-                      <Text style={styles.linkText}>
-                        {isPaying ? "إلغاء" : "تسجيل دفعة"}
-                      </Text>
-                    </Pressable>
-                  </View>
-                </View>
+        (batches ?? []).map((b) => {
+          const isReceiving = receivingBatchId === b.id;
+          return (
+            <View key={b.id} style={styles.card}>
+              <View style={styles.rowBetween}>
+                <Text style={styles.title}>{b.workshop.name}</Text>
+                <Text style={styles.meta}>
+                  {b.orderLine.color} ({b.orderLine.size})
+                </Text>
+              </View>
+              <View style={styles.rowBetween}>
+                <Text style={styles.meta}>مرسل: {b.sentQty}</Text>
+                <Text style={[styles.meta, { color: "#16a34a" }]}>
+                  مستلم: {b.receivedQty}
+                </Text>
+                <Text
+                  style={[styles.meta, { color: "#dc2626", fontWeight: "700" }]}
+                >
+                  متبقي: {b.remainingQty}
+                </Text>
+              </View>
 
-                {isPaying ? (
-                  <View style={{ gap: 8 }}>
-                    <View style={styles.row}>
+              {b.note ? (
+                <Text style={styles.batchNote}>ملاحظة الدفعة: {b.note}</Text>
+              ) : null}
+
+              {b.receipts.length > 0 ? (
+                <View style={styles.history}>
+                  <Text style={styles.historyTitle}>
+                    ما تم إنجازه واستلامه ({b.receipts.length})
+                  </Text>
+                  {b.receipts.map((r) => (
+                    <View key={r.id} style={styles.historyRow}>
+                      <Text style={styles.historyQty}>+{r.quantity}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.historyDate}>
+                          {new Date(r.createdAt).toLocaleDateString()}
+                        </Text>
+                        {r.note ? (
+                          <Text style={styles.historyNote}>{r.note}</Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+
+              {b.remainingQty > 0 ? (
+                <>
+                  <Pressable
+                    style={[styles.primaryBtn, { backgroundColor: "#16a34a" }]}
+                    onPress={() => {
+                      setReceiveQty("");
+                      setReceivingBatchId(isReceiving ? null : b.id);
+                    }}
+                  >
+                    <Text style={styles.btnText}>
+                      {isReceiving ? "إلغاء" : "استلام قطع جاهزة"}
+                    </Text>
+                  </Pressable>
+
+                  {isReceiving ? (
+                    <View style={{ gap: 8 }}>
+                      <View style={styles.row}>
+                        <TextInput
+                          style={[styles.input, { flex: 1 }]}
+                          placeholder="العدد المستلم"
+                          value={receiveQty}
+                          onChangeText={setReceiveQty}
+                          keyboardType="numeric"
+                          textAlign="right"
+                        />
+                        <Pressable
+                          style={styles.confirmBtn}
+                          disabled={
+                            !Number(receiveQty) || receiveBatch.isPending
+                          }
+                          onPress={() =>
+                            receiveBatch.mutate({
+                              batchId: b.id,
+                              quantity: Number(receiveQty),
+                              note: receiveNote.trim() || undefined,
+                            })
+                          }
+                        >
+                          <Text style={styles.btnText}>تأكيد</Text>
+                        </Pressable>
+                      </View>
                       <TextInput
-                        style={[styles.input, { flex: 1 }]}
-                        placeholder="المبلغ"
-                        value={payAmount}
-                        onChangeText={setPayAmount}
-                        keyboardType="numeric"
-                        textAlign="right"
-                      />
-                      <TextInput
-                        style={[styles.input, { flex: 2 }]}
-                        placeholder="ملاحظة (اختياري)"
-                        value={payNote}
-                        onChangeText={setPayNote}
+                        style={styles.input}
+                        placeholder="ماذا أنجز المشغل؟ (ملاحظة اختيارية)"
+                        value={receiveNote}
+                        onChangeText={setReceiveNote}
                         textAlign="right"
                       />
                     </View>
-                    <Pressable
-                      style={[
-                        styles.primaryBtn,
-                        { backgroundColor: "#16a34a" },
-                      ]}
-                      disabled={!Number(payAmount) || recordPayment.isPending}
-                      onPress={() =>
-                        recordPayment.mutate({
-                          id: item.id,
-                          amountMinor: Number(payAmount),
-                          note: payNote.trim() || undefined,
-                        })
-                      }
-                    >
-                      <Text style={styles.btnText}>تأكيد الدفعة</Text>
-                    </Pressable>
-                  </View>
-                ) : null}
-              </View>
-            );
-          }}
-        />
+                  ) : null}
+                </>
+              ) : null}
+            </View>
+          );
+        })
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb", padding: 12 },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  headerText: { fontSize: 16, fontWeight: "700" },
-  addBtn: {
-    backgroundColor: "#2563eb",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  btnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  container: { padding: 14, gap: 12, backgroundColor: "#f9fafb", flexGrow: 1 },
   card: {
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 12,
-    marginBottom: 8,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     gap: 8,
   },
+  sectionTitle: { fontSize: 16, fontWeight: "700" },
+  label: { fontSize: 13, color: "#4b5563" },
+  chipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  chip: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  chipActive: { backgroundColor: "#111827", borderColor: "#111827" },
+  chipText: { fontSize: 12, color: "#111827" },
+  chipTextActive: { color: "#fff", fontWeight: "700" },
   row: { flexDirection: "row", gap: 8 },
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  title: { fontSize: 15, fontWeight: "700" },
-  meta: { fontSize: 12, color: "#6b7280" },
-  balance: { fontSize: 14, fontWeight: "700", color: "#dc2626" },
-  linkText: { fontSize: 12, color: "#111827", textDecorationLine: "underline" },
   input: {
     borderWidth: 1,
     borderColor: "#d1d5db",
@@ -238,5 +346,32 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: "center",
   },
-  empty: { textAlign: "center", marginTop: 40, color: "#6b7280" },
+  confirmBtn: {
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    justifyContent: "center",
+  },
+  btnText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  batchNote: { fontSize: 13, color: "#1f2937" },
+  history: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 8,
+    padding: 10,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  historyTitle: { fontSize: 13, fontWeight: "700", color: "#374151" },
+  historyRow: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
+  historyQty: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#16a34a",
+    minWidth: 44,
+  },
+  historyDate: { fontSize: 12, color: "#6b7280" },
+  historyNote: { fontSize: 13, color: "#374151" },
+  title: { fontSize: 15, fontWeight: "700" },
+  meta: { fontSize: 13, color: "#4b5563" },
 });

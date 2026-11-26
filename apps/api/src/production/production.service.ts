@@ -11,6 +11,16 @@ import { RecordCuttingDto } from './dto/record-cutting.dto';
 import { CreateHoldDto } from './dto/create-hold.dto';
 import { ResolveHoldDto } from './dto/resolve-hold.dto';
 
+const ACTIVITY_COUNTS = {
+  cuttingRecords: true,
+  holds: true,
+  workshopBatches: true,
+  finishingRecords: true,
+  qualityChecks: true,
+  deliveryItems: true,
+  returnItems: true,
+} as const;
+
 @Injectable()
 export class ProductionService {
   constructor(private readonly prisma: PrismaService) {}
@@ -20,6 +30,15 @@ export class ProductionService {
       where: { id: orderId, deletedAt: null },
       select: { id: true },
     });
+
+    await this.prisma.orderColor.createMany({
+      data: [...new Set(dto.lines.map((l) => l.color.trim()))].map((name) => ({
+        orderId,
+        name,
+      })),
+      skipDuplicates: true,
+    });
+
     if (!order) throw new NotFoundException('Order not found');
 
     return this.prisma.$transaction(
@@ -215,5 +234,72 @@ export class ProductionService {
         version: { increment: 1 },
       },
     });
+  }
+
+  listColors(orderId: string) {
+    return this.prisma.orderColor.findMany({
+      where: { orderId },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, name: true },
+    });
+  }
+
+  async ensureColors(orderId: string, names: string[]) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+
+    const clean = [...new Set(names.map((n) => n.trim()).filter(Boolean))];
+    if (clean.length) {
+      await this.prisma.orderColor.createMany({
+        data: clean.map((name) => ({ orderId, name })),
+        skipDuplicates: true,
+      });
+    }
+    return this.listColors(orderId);
+  }
+
+  async deleteColor(orderId: string, colorId: string) {
+    const color = await this.prisma.orderColor.findFirst({
+      where: { id: colorId, orderId },
+    });
+    if (!color) throw new NotFoundException('Color not found');
+
+    const lines = await this.prisma.orderLine.findMany({
+      where: { orderId, color: color.name },
+      include: { _count: { select: ACTIVITY_COUNTS } },
+    });
+    if (lines.some((l) => Object.values(l._count).some((n) => n > 0))) {
+      throw new BadRequestException(
+        'Cannot delete a color that already has production activity',
+      );
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.orderLine.deleteMany({
+        where: { id: { in: lines.map((l) => l.id) } },
+      }),
+      this.prisma.orderColor.delete({ where: { id: colorId } }),
+    ]);
+    return { deleted: true };
+  }
+
+  async deleteLine(orderId: string, lineId: string) {
+    const line = await this.prisma.orderLine.findFirst({
+      where: { id: lineId, orderId },
+      include: {
+        count: { select: ACTIVITY_COUNTS },
+      },
+    });
+    if (!line) throw new NotFoundException('Order line not found');
+    if (Object.values(line._count).some((n) => n > 0)) {
+      throw new BadRequestException(
+        'Cannot delete a line that already has production activity',
+      );
+    }
+    await this.prisma.orderLine.delete({ where: { id: lineId } });
+    return { deleted: true };
   }
 }

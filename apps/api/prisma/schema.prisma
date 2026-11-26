@@ -96,6 +96,7 @@ model Attachment {
   materialImages      Material[]      @relation("MaterialImage")
   orderMaterialImages OrderMaterial[] @relation("OrderMaterialImage")
   orderStepAttachments OrderStepAttachment[]
+  orderColorAttachments OrderColorAttachment[]
 }
 
 
@@ -166,6 +167,7 @@ model Order {
   returns    Return[]
   invoices Invoice[]
   expenses Expense[]
+  colors OrderColor[]
 }
 
 model OrderAttachment {
@@ -620,4 +622,26 @@ model OrderStepAttachment {
   createdAt    DateTime   @default(now())
 
   @@id([orderStepId, attachmentId])
+}
+
+
+model OrderColor {
+  id          String                 @id @default(uuid()) @db.Uuid
+  orderId     String                 @db.Uuid
+  order       Order                  @relation(fields: [orderId], references: [id])
+  name        String
+  attachments OrderColorAttachment[]
+  createdAt   DateTime               @default(now())
+
+  @@unique([orderId, name])
+}
+
+model OrderColorAttachment {
+  orderColorId String     @db.Uuid
+  attachmentId String     @db.Uuid
+  orderColor   OrderColor @relation(fields: [orderColorId], references: [id], onDelete: Cascade)
+  attachment   Attachment @relation(fields: [attachmentId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@id([orderColorId, attachmentId])
 }

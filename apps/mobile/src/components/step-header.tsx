@@ -12,6 +12,7 @@ import {
 import { STATUS_COLORS, STATUS_LABELS, STEP_LABELS } from "@/lib/step-labels";
 import { ApiError, apiFetch } from "@/lib/api-client";
 import { PhotoGallery } from "@/components/photo-gallery";
+import { StepNote } from "./step-note";
 interface StepHeaderProps {
   orderId: string;
   stepType: OrderStepType;
@@ -159,6 +160,11 @@ export function StepHeader({ orderId, stepType }: StepHeaderProps) {
               label={`صور ${STEP_LABELS[stepType]}`}
             />
           </View>
+          <StepNote
+            orderId={orderId}
+            stepType={stepType}
+            initial={currentStep.note}
+          />
         </>
       ) : null}
 

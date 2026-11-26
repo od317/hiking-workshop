@@ -30,11 +30,13 @@ export const STATUS_COLORS: Record<OrderStepStatus, string> = {
 export function getStepRoute(orderId: string, stepType: OrderStepType): string {
   switch (stepType) {
     case "PATTERN":
+      return `/(app)/orders/${orderId}/pattern`;
     case "SAMPLE":
-      return `/(app)/orders/${orderId}/design?step=${stepType}`;
+      return `/(app)/orders/${orderId}/sample`;
     case "ACCESSORIES":
+      return `/(app)/orders/${orderId}/accessories`;
     case "CLOTH":
-      return `/(app)/orders/${orderId}/materials?step=${stepType}`;
+      return `/(app)/orders/${orderId}/cloth`;
     case "CUTTING":
       return `/(app)/orders/${orderId}/production?step=${stepType}`;
     case "WORKSHOP":

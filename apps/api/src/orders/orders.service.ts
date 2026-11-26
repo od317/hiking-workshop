@@ -175,4 +175,15 @@ export class OrdersService {
       orderBy: { sortOrder: 'asc' },
     });
   }
+
+  async updateStepNote(orderId: string, stepType: OrderStepType, note: string) {
+    const step = await this.prisma.orderStep.findUnique({
+      where: { orderId_type: { orderId, type: stepType } },
+    });
+    if (!step) throw new NotFoundException('Step not found');
+    return this.prisma.orderStep.update({
+      where: { id: step.id },
+      data: { note: note.trim(), version: { increment: 1 } },
+    });
+  }
 }

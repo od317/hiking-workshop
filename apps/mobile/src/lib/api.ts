@@ -138,6 +138,12 @@ export interface WorkshopBatch {
   note?: string | null;
   workshop: { id: string; name: string };
   orderLine: { id: string; color: string; size: string };
+  receipts: Array<{
+    id: string;
+    quantity: number;
+    note?: string | null;
+    createdAt: string;
+  }>;
 }
 
 export interface FulfillmentLine {
@@ -197,4 +203,12 @@ export interface OrderFinance {
   }>;
 }
 
+export type AttachmentEntityType =
+  "ORDER" | "PATTERN" | "SAMPLE" | "MATERIAL" | "ORDER_MATERIAL" | "ORDER_STEP";
 
+export interface Attachment {
+  id: string;
+  url: string; // e.g. "/uploads/<uuid>.jpg"
+  mimeType: string;
+  createdAt: string;
+}

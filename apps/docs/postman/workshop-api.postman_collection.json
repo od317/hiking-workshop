@@ -27,7 +27,8 @@
     { "key": "holdId", "value": "" },
     { "key": "workshopId", "value": "" },
     { "key": "batchId", "value": "" },
-    { "key": "invoiceId", "value": "" }
+    { "key": "invoiceId", "value": "" },
+    { "key": "attachmentUrl", "value": "" }
   ],
   "item": [
     {
@@ -822,6 +823,117 @@
           }
         }
       ]
+    },
+    {
+      "name": "Attachments",
+      "item": [
+        {
+          "name": "Upload Photo to Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('attachmentId', body.id);",
+                  "  pm.collectionVariables.set('attachmentId', body.id);",
+                  "  pm.collectionVariables.set('attachmentUrl', body.url);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] },
+                { "key": "entityType", "value": "ORDER", "type": "text" },
+                { "key": "entityId", "value": "{{orderId}}", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/attachments/upload"
+          }
+        },
+        {
+          "name": "Upload Photo to Sample",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] },
+                { "key": "entityType", "value": "SAMPLE", "type": "text" },
+                { "key": "entityId", "value": "{{sampleId}}", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/attachments/upload"
+          }
+        },
+        {
+          "name": "List Order Photos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attachments?entityType=ORDER&entityId={{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attachments"],
+              "query": [
+                { "key": "entityType", "value": "ORDER" },
+                { "key": "entityId", "value": "{{orderId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Sample Photos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attachments?entityType=SAMPLE&entityId={{sampleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attachments"],
+              "query": [
+                { "key": "entityType", "value": "SAMPLE" },
+                { "key": "entityId", "value": "{{sampleId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "View Uploaded File (no auth)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}{{attachmentUrl}}"
+          }
+        },
+        {
+          "name": "Delete Photo",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/attachments/{{attachmentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Upload Photo to Step",
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": [] },
+            { "key": "entityType", "value": "ORDER_STEP", "type": "text" },
+            { "key": "entityId", "value": "{{stepId}}", "type": "text" }
+          ]
+        },
+        "url": "{{baseUrl}}/attachments/upload"
+      }
     }
   ]
 }

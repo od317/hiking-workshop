@@ -15,6 +15,7 @@ import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateStepDto } from './dto/update-step.dto';
 import { ReorderStepsDto } from './dto/reorder-steps.dto';
+import { UpdateStepNoteDto } from './dto/update-step-note.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -54,5 +55,15 @@ export class OrdersController {
     @Body() dto: UpdateStepDto,
   ) {
     return this.orders.updateStep(id, stepType, dto);
+  }
+
+  @Patch(':id/steps/:stepType/note')
+  updateStepNote(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('stepType', new ParseEnumPipe(OrderStepType))
+    stepType: OrderStepType,
+    @Body() dto: UpdateStepNoteDto,
+  ) {
+    return this.orders.updateStepNote(id, stepType, dto.note);
   }
 }
