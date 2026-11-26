@@ -101,6 +101,17 @@ export default function OrderDetailScreen() {
           القماش والإكسسوارات
         </Text>
       </Pressable>
+      <Pressable
+        style={{
+          backgroundColor: "#111827",
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+          borderRadius: 8,
+        }}
+        onPress={() => router.push(`/(app)/orders/${id}/production`)}
+      >
+        <Text style={{ color: "#fff", fontWeight: "600" }}>القص والإنتاج</Text>
+      </Pressable>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         <Pressable
           style={{

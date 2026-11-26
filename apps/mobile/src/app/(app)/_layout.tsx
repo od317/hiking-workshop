@@ -14,6 +14,10 @@ export default function AppLayout() {
         name="orders/[id]/materials"
         options={{ title: "القماش والإكسسوارات" }}
       />
+      <Stack.Screen
+        name="orders/[id]/production"
+        options={{ title: "القص والإنتاج" }}
+      />
     </Stack>
   );
 }

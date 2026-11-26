@@ -23,6 +23,7 @@ const design_module_1 = require("./design/design.module");
 const materials_module_1 = require("./materials/materials.module");
 const delivery_module_1 = require("./delivery/delivery.module");
 const finance_module_1 = require("./finance/finance.module");
+const production_module_1 = require("./production/production.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -51,6 +52,7 @@ exports.AppModule = AppModule = __decorate([
             materials_module_1.MaterialsModule,
             delivery_module_1.DeliveryModule,
             finance_module_1.FinanceModule,
+            production_module_1.ProductionModule,
         ],
         controllers: [health_controller_1.HealthController],
         providers: [{ provide: core_1.APP_GUARD, useClass: throttler_1.ThrottlerGuard }],

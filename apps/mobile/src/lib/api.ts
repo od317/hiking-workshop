@@ -81,3 +81,38 @@ export interface OrderMaterial {
   unit: string;
   note?: string | null;
 }
+
+export interface ProductionLine {
+  id: string;
+  orderId: string;
+  color: string;
+  size: string;
+  orderedQty: number;
+  cutQty: number;
+  remainingToCut: number;
+  openHoldQty: number;
+}
+
+export interface ProductionHold {
+  id: string;
+  orderId: string;
+  orderLineId: string;
+  stage: OrderStepType;
+  quantity: number;
+  reason: string;
+  status: "OPEN" | "RESOLVED";
+  orderLine: { color: string; size: string };
+  createdAt: string;
+}
+
+export interface ProductionBoard {
+  orderId: string;
+  orderNumber: string;
+  totals: {
+    orderedQty: number;
+    cutQty: number;
+    openHoldQty: number;
+  };
+  lines: ProductionLine[];
+  openHolds: ProductionHold[];
+}

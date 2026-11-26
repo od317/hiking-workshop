@@ -14,6 +14,7 @@ import { DesignModule } from './design/design.module';
 import { MaterialsModule } from './materials/materials.module';
 import { DeliveryModule } from './delivery/delivery.module';
 import { FinanceModule } from './finance/finance.module';
+import { ProductionModule } from './production/production.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { FinanceModule } from './finance/finance.module';
     MaterialsModule,
     DeliveryModule,
     FinanceModule,
+    ProductionModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
