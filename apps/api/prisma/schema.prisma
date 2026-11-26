@@ -33,6 +33,9 @@ model User {
   materialsCreated      Material[]      @relation("MaterialCreatedBy")
   stockMovementsCreated StockMovement[] @relation("StockMovementCreatedBy")
   orderMaterialsCreated OrderMaterial[] @relation("OrderMaterialCreatedBy")
+  cuttingRecordsCreated CuttingRecord[] @relation("CuttingCreatedBy")
+  holdsCreated          Hold[]          @relation("HoldCreatedBy")
+  holdsResolved         Hold[]          @relation("HoldResolvedBy")
 }
 
 model Setting {
@@ -143,6 +146,8 @@ model Order {
   version     Int               @default(1)
   stockMovements StockMovement[]
   materials      OrderMaterial[]
+  lines OrderLine[]
+  holds Hold[]
 }
 
 model OrderAttachment {
@@ -302,4 +307,65 @@ model OrderMaterial {
   version            Int          @default(1)
 
   @@index([orderId, kind])
+}
+
+
+enum HoldStatus {
+  OPEN
+  RESOLVED
+}
+
+model OrderLine {
+  id             String          @id @default(uuid()) @db.Uuid
+  orderId        String          @db.Uuid
+  order          Order           @relation(fields: [orderId], references: [id])
+  color          String
+  size           String
+  orderedQty     Int
+  cuttingRecords CuttingRecord[]
+  holds          Hold[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  version        Int             @default(1)
+
+  @@unique([orderId, color, size])
+  @@index([orderId])
+}
+
+model CuttingRecord {
+  id          String    @id @default(uuid()) @db.Uuid
+  orderLineId String    @db.Uuid
+  orderLine   OrderLine @relation(fields: [orderLineId], references: [id])
+  // Positive for pieces cut, negative for a count correction
+  quantity    Int
+  note        String?
+  createdById String    @db.Uuid
+  createdBy   User      @relation("CuttingCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([orderLineId])
+}
+
+model Hold {
+  id             String        @id @default(uuid()) @db.Uuid
+  orderId        String        @db.Uuid
+  order          Order         @relation(fields: [orderId], references: [id])
+  orderLineId    String        @db.Uuid
+  orderLine      OrderLine     @relation(fields: [orderLineId], references: [id])
+  stage          OrderStepType
+  quantity       Int
+  reason         String
+  status         HoldStatus    @default(OPEN)
+  resolutionNote String?
+  resolvedAt     DateTime?
+  resolvedById   String?       @db.Uuid
+  resolvedBy     User?         @relation("HoldResolvedBy", fields: [resolvedById], references: [id])
+  createdById    String        @db.Uuid
+  createdBy      User          @relation("HoldCreatedBy", fields: [createdById], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  version        Int           @default(1)
+
+  @@index([orderId, status])
+  @@index([orderLineId])
 }
