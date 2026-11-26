@@ -24,6 +24,12 @@ model User {
   updatedAt    DateTime @updatedAt
   version      Int      @default(1)
   refreshTokens RefreshToken[]
+  attachments Attachment[]
+  customersCreated Customer[] @relation("CustomerCreatedBy")
+  ordersCreated    Order[]    @relation("OrderCreatedBy")
+  patternsCreated  Pattern[]  @relation("PatternCreatedBy")
+  samplesCreated   Sample[]   @relation("SampleCreatedBy")
+  samplesDecided   Sample[]   @relation("SampleDecidedBy")
 }
 
 model Setting {
@@ -46,3 +52,173 @@ model RefreshToken {
   @@index([userId])
   @@index([familyId])
 }
+
+
+
+enum AttachmentStatus {
+  PENDING
+  READY
+}
+
+model Attachment {
+  id                 String              @id @default(uuid()) @db.Uuid
+  key                String              @unique
+  mimeType           String
+  sizeBytes          Int
+  purpose            String
+  status             AttachmentStatus    @default(PENDING)
+  createdById        String              @db.Uuid
+  createdBy          User                @relation(fields: [createdById], references: [id])
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+  version            Int                 @default(1)
+  orderAttachments   OrderAttachment[]
+  patternAttachments PatternAttachment[]
+  sampleAttachments  SampleAttachment[]
+}
+
+
+enum OrderStepType {
+  PATTERN
+  SAMPLE
+  ACCESSORIES
+  CLOTH
+  CUTTING
+  WORKSHOP
+  FINISHING
+  FINAL_CHECK
+  DELIVERY
+}
+
+enum OrderStepStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DONE
+  BLOCKED
+  SKIPPED
+}
+
+enum SampleStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Customer {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  phone       String?
+  note        String?
+  orders      Order[]
+  createdById String    @db.Uuid
+  createdBy   User      @relation("CustomerCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  version     Int       @default(1)
+}
+
+model Order {
+  id          String            @id @default(uuid()) @db.Uuid
+  orderNumber String            @unique
+  customerId  String            @db.Uuid
+  customer    Customer          @relation(fields: [customerId], references: [id])
+  title       String?
+  note        String?
+  steps       OrderStep[]
+  attachments OrderAttachment[]
+  patterns    Pattern[]
+  samples     Sample[]
+  createdById String            @db.Uuid
+  createdBy   User              @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deletedAt   DateTime?
+  version     Int               @default(1)
+}
+
+model OrderAttachment {
+  orderId      String     @db.Uuid
+  attachmentId String     @db.Uuid
+  order        Order      @relation(fields: [orderId], references: [id])
+  attachment   Attachment @relation(fields: [attachmentId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@id([orderId, attachmentId])
+}
+
+model OrderStep {
+  id        String          @id @default(uuid()) @db.Uuid
+  orderId   String          @db.Uuid
+  order     Order           @relation(fields: [orderId], references: [id])
+  type      OrderStepType
+  status    OrderStepStatus @default(NOT_STARTED)
+  note      String?
+  startedAt DateTime?
+  doneAt    DateTime?
+  updatedAt DateTime        @updatedAt
+  version   Int             @default(1)
+
+  @@unique([orderId, type])
+}
+
+model Pattern {
+  id          String              @id @default(uuid()) @db.Uuid
+  orderId     String              @db.Uuid
+  order       Order               @relation(fields: [orderId], references: [id])
+  versionNum  Int
+  note        String?
+  attachments PatternAttachment[]
+  createdById String              @db.Uuid
+  createdBy   User                @relation("PatternCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  deletedAt   DateTime?
+  version     Int                 @default(1)
+
+  @@unique([orderId, versionNum])
+}
+
+model PatternAttachment {
+  patternId    String     @db.Uuid
+  attachmentId String     @db.Uuid
+  pattern      Pattern    @relation(fields: [patternId], references: [id])
+  attachment   Attachment @relation(fields: [attachmentId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@id([patternId, attachmentId])
+}
+
+model Sample {
+  id          String             @id @default(uuid()) @db.Uuid
+  orderId     String             @db.Uuid
+  order       Order              @relation(fields: [orderId], references: [id])
+  attemptNum  Int
+  status      SampleStatus       @default(PENDING)
+  note        String?
+  decisionNote String?
+  decidedAt   DateTime?
+  decidedById String?            @db.Uuid
+  decidedBy   User?              @relation("SampleDecidedBy", fields: [decidedById], references: [id])
+  attachments SampleAttachment[]
+  createdById String             @db.Uuid
+  createdBy   User               @relation("SampleCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  deletedAt   DateTime?
+  version     Int                @default(1)
+
+  @@unique([orderId, attemptNum])
+}
+
+model SampleAttachment {
+  sampleId     String     @db.Uuid
+  attachmentId String     @db.Uuid
+  sample       Sample     @relation(fields: [sampleId], references: [id])
+  attachment   Attachment @relation(fields: [attachmentId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@id([sampleId, attachmentId])
+}
+

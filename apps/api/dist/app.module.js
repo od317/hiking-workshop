@@ -17,6 +17,8 @@ const auth_module_1 = require("./auth/auth.module");
 const env_1 = require("./config/env");
 const health_controller_1 = require("./health/health.controller");
 const prisma_module_1 = require("./prisma/prisma.module");
+const customers_module_1 = require("./customers/customers.module");
+const orders_module_1 = require("./orders/orders.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -39,6 +41,8 @@ exports.AppModule = AppModule = __decorate([
             throttler_1.ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
+            customers_module_1.CustomersModule,
+            orders_module_1.OrdersModule,
         ],
         controllers: [health_controller_1.HealthController],
         providers: [{ provide: core_1.APP_GUARD, useClass: throttler_1.ThrottlerGuard }],

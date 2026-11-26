@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
 import { validateEnv } from './config/env';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { CustomersModule } from './customers/customers.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { PrismaModule } from './prisma/prisma.module';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
     AuthModule,
+    CustomersModule,
+    OrdersModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -1,0 +1,323 @@
+{
+  "info": {
+    "_postman_id": "workshop-api-collection-v1",
+    "name": "Workshop API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "customerId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "attachmentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('accessToken', body.accessToken);",
+                  "  pm.environment.set('refreshToken', body.refreshToken);",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"o12345678\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('accessToken', body.accessToken);",
+                  "  pm.environment.set('refreshToken', body.refreshToken);",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "Presign Upload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('attachmentId', body.attachmentId);",
+                  "  pm.collectionVariables.set('attachmentId', body.attachmentId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mimeType\": \"image/jpeg\",\n  \"sizeBytes\": 120000,\n  \"purpose\": \"order\"\n}"
+            },
+            "url": "{{baseUrl}}/files/presign"
+          }
+        },
+        {
+          "name": "Confirm Upload",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/files/{{attachmentId}}/confirm"
+          }
+        },
+        {
+          "name": "Get Signed URL",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/files/{{attachmentId}}/url"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "Create Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('customerId', body.id);",
+                  "  pm.collectionVariables.set('customerId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"أحمد\",\n  \"phone\": \"0999111222\",\n  \"note\": \"زبون جملة\"\n}"
+            },
+            "url": "{{baseUrl}}/customers"
+          }
+        },
+        {
+          "name": "List Customers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/customers?search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["customers"],
+              "query": [{ "key": "search", "value": "", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Get Customer",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/customers/{{customerId}}"
+          }
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"ملاحظة محدثة\"\n}"
+            },
+            "url": "{{baseUrl}}/customers/{{customerId}}"
+          }
+        },
+        {
+          "name": "Delete Customer",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/customers/{{customerId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('orderId', body.id);",
+                  "  pm.collectionVariables.set('orderId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"title\": \"قميص أبيض صيفي\",\n  \"note\": \"حسب الصورة المرسلة\"\n}"
+            },
+            "url": "{{baseUrl}}/orders"
+          }
+        },
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}",
+                  "disabled": true
+                },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{orderId}}"
+          }
+        },
+        {
+          "name": "Update Step (CLOTH -> DONE)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DONE\",\n  \"note\": \"تم اختيار القماش\"\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/steps/CLOTH"
+          }
+        },
+        {
+          "name": "Update Step (CUTTING -> IN_PROGRESS, expect 400)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/steps/CUTTING"
+          }
+        }
+      ]
+    }
+  ]
+}

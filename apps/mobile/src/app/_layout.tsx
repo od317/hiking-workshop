@@ -1,18 +1,47 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import "../i18n";
+import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { Slot, useRouter, useSegments } from "expo-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useAuthStore } from "../store/auth.store";
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+const queryClient = new QueryClient();
 
-SplashScreen.preventAutoHideAsync();
+function AuthGate() {
+  const { user, isHydrated, hydrate } = useAuthStore();
+  const segments = useSegments();
+  const router = useRouter();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!user && !inAuthGroup) {
+      router.replace("/(auth)/login");
+    } else if (user && inAuthGroup) {
+      router.replace("/(app)");
+    }
+  }, [user, isHydrated, segments, router]);
+
+  if (!isHydrated) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return <Slot />;
+}
+
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthGate />
+    </QueryClientProvider>
   );
 }
