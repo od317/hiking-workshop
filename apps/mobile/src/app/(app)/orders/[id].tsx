@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { OrderDetail, OrderStepStatus, OrderStepType } from "@/lib/api";
@@ -23,6 +23,7 @@ const NEXT_STATUS: Record<OrderStepStatus, OrderStepStatus> = {
 };
 
 export default function OrderDetailScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const qc = useQueryClient();
 
@@ -86,6 +87,21 @@ export default function OrderDetailScreen() {
         <Text style={styles.title}>{order.title || "بدون عنوان"}</Text>
         <Text style={styles.meta}>الزبون: {order.customer.name}</Text>
         {order.note ? <Text style={styles.note}>{order.note}</Text> : null}
+      </View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        <Pressable
+          style={{
+            backgroundColor: "#111827",
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 8,
+          }}
+          onPress={() => router.push(`/(app)/orders/${id}/design`)}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600" }}>
+            الباترون والعينة
+          </Text>
+        </Pressable>
       </View>
 
       <Text style={styles.sectionTitle}>
