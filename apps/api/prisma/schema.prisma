@@ -40,6 +40,10 @@ model User {
   workshopBatchesCreated WorkshopBatch[]        @relation("WorkshopBatchCreatedBy")
   workshopReceiptsCreated WorkshopBatchReceipt[] @relation("WorkshopReceiptCreatedBy")
   workshopLedgerCreated  WorkshopLedgerEntry[]  @relation("WorkshopLedgerCreatedBy")
+  finishingRecordsCreated FinishingRecord[] @relation("FinishingCreatedBy")
+  qualityChecksCreated    QualityCheck[]    @relation("QualityCheckCreatedBy")
+  deliveriesCreated       Delivery[]        @relation("DeliveryCreatedBy")
+  returnsCreated          Return[]          @relation("ReturnCreatedBy")
 }
 
 model Setting {
@@ -153,6 +157,8 @@ model Order {
   lines OrderLine[]
   holds Hold[]
   workshopBatches WorkshopBatch[]
+  deliveries Delivery[]
+  returns    Return[]
 }
 
 model OrderAttachment {
@@ -333,6 +339,10 @@ model OrderLine {
   updatedAt      DateTime        @updatedAt
   version        Int             @default(1)
   workshopBatches WorkshopBatch[]
+  finishingRecords FinishingRecord[]
+  qualityChecks    QualityCheck[]
+  deliveryItems    DeliveryItem[]
+  returnItems      ReturnItem[]
   @@unique([orderId, color, size])
   @@index([orderId])
 }
@@ -450,4 +460,89 @@ model WorkshopLedgerEntry {
 
   @@index([workshopId])
   @@index([batchId])
+}
+
+enum ReturnDisposition {
+  RESTOCK
+  REPAIR
+  WRITE_OFF
+}
+
+model FinishingRecord {
+  id          String    @id @default(uuid()) @db.Uuid
+  orderLineId String    @db.Uuid
+  orderLine   OrderLine @relation(fields: [orderLineId], references: [id])
+  quantity    Int
+  note        String?
+  createdById String    @db.Uuid
+  createdBy   User      @relation("FinishingCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([orderLineId])
+}
+
+model QualityCheck {
+  id          String    @id @default(uuid()) @db.Uuid
+  orderLineId String    @db.Uuid
+  orderLine   OrderLine @relation(fields: [orderLineId], references: [id])
+  passedQty   Int
+  rejectedQty Int       @default(0)
+  note        String?
+  createdById String    @db.Uuid
+  createdBy   User      @relation("QualityCheckCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([orderLineId])
+}
+
+model Delivery {
+  id          String         @id @default(uuid()) @db.Uuid
+  orderId     String         @db.Uuid
+  order       Order          @relation(fields: [orderId], references: [id])
+  note        String?
+  items       DeliveryItem[]
+  createdById String         @db.Uuid
+  createdBy   User           @relation("DeliveryCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime       @default(now())
+
+  @@index([orderId])
+}
+
+model DeliveryItem {
+  id          String    @id @default(uuid()) @db.Uuid
+  deliveryId  String    @db.Uuid
+  delivery    Delivery  @relation(fields: [deliveryId], references: [id])
+  orderLineId String    @db.Uuid
+  orderLine   OrderLine @relation(fields: [orderLineId], references: [id])
+  quantity    Int
+
+  @@index([deliveryId])
+  @@index([orderLineId])
+}
+
+model Return {
+  id          String       @id @default(uuid()) @db.Uuid
+  orderId     String       @db.Uuid
+  order       Order        @relation(fields: [orderId], references: [id])
+  reason      String?
+  items       ReturnItem[]
+  createdById String       @db.Uuid
+  createdBy   User         @relation("ReturnCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+
+  @@index([orderId])
+}
+
+model ReturnItem {
+  id          String            @id @default(uuid()) @db.Uuid
+  returnId    String            @db.Uuid
+  return      Return            @relation(fields: [returnId], references: [id])
+  orderLineId String            @db.Uuid
+  orderLine   OrderLine         @relation(fields: [orderLineId], references: [id])
+  quantity    Int
+  disposition ReturnDisposition
+  note        String?
+
+  @@index([returnId])
+  @@index([orderLineId])
 }

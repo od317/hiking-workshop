@@ -698,6 +698,66 @@
           }
         }
       ]
+    },
+    {
+      "name": "Delivery, Finishing & Returns",
+      "item": [
+        {
+          "name": "Record Finishing (25 pcs)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderLineId\": \"{{orderLineId}}\",\n  \"quantity\": 25,\n  \"note\": \"كوي وتركيب الأزرار\"\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/finishing"
+          }
+        },
+        {
+          "name": "Record Quality Check (23 passed, 2 rejected)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderLineId\": \"{{orderLineId}}\",\n  \"passedQty\": 23,\n  \"rejectedQty\": 2,\n  \"note\": \"قطعتان فيهما عيب خياطة\"\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/quality-checks"
+          }
+        },
+        {
+          "name": "Create Delivery (20 pcs)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"تسليم الدفعة الأولى للزبون\",\n  \"items\": [\n    { \"orderLineId\": \"{{orderLineId}}\", \"quantity\": 20 }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/deliveries"
+          }
+        },
+        {
+          "name": "Create Return (2 pcs -> REPAIR)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"مشكلة في الكوي\",\n  \"items\": [\n    { \"orderLineId\": \"{{orderLineId}}\", \"quantity\": 2, \"disposition\": \"REPAIR\", \"note\": \"إعادة كوي\" }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/returns"
+          }
+        },
+        {
+          "name": "Get Fulfillment Summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{orderId}}/fulfillment"
+          }
+        }
+      ]
     }
   ]
 }

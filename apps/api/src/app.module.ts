@@ -12,6 +12,7 @@ import { CustomersModule } from './customers/customers.module';
 import { OrdersModule } from './orders/orders.module';
 import { DesignModule } from './design/design.module';
 import { MaterialsModule } from './materials/materials.module';
+import { DeliveryModule } from './delivery/delivery.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { MaterialsModule } from './materials/materials.module';
     OrdersModule,
     DesignModule,
     MaterialsModule,
+    DeliveryModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
