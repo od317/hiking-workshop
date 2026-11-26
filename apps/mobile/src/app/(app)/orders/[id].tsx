@@ -88,6 +88,19 @@ export default function OrderDetailScreen() {
         <Text style={styles.meta}>الزبون: {order.customer.name}</Text>
         {order.note ? <Text style={styles.note}>{order.note}</Text> : null}
       </View>
+      <Pressable
+        style={{
+          backgroundColor: "#111827",
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+          borderRadius: 8,
+        }}
+        onPress={() => router.push(`/(app)/orders/${id}/materials`)}
+      >
+        <Text style={{ color: "#fff", fontWeight: "600" }}>
+          القماش والإكسسوارات
+        </Text>
+      </Pressable>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         <Pressable
           style={{

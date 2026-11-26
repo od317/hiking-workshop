@@ -55,3 +55,29 @@ export interface OrderDetail extends OrderSummary {
     createdAt: string;
   }>;
 }
+
+export type MaterialKind = "FABRIC" | "ACCESSORY";
+
+export interface Material {
+  id: string;
+  kind: MaterialKind;
+  name: string;
+  color?: string | null;
+  unit: string;
+  unitCostMinor?: number | null;
+  note?: string | null;
+  currentStock: number;
+}
+
+export interface OrderMaterial {
+  id: string;
+  orderId: string;
+  kind: MaterialKind;
+  materialId?: string | null;
+  material?: Pick<Material, "id" | "name" | "color" | "unit"> | null;
+  customName?: string | null;
+  customColor?: string | null;
+  quantity: string | number;
+  unit: string;
+  note?: string | null;
+}
