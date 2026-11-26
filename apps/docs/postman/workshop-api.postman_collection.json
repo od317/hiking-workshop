@@ -26,7 +26,8 @@
     { "key": "orderLineId", "value": "" },
     { "key": "holdId", "value": "" },
     { "key": "workshopId", "value": "" },
-    { "key": "batchId", "value": "" }
+    { "key": "batchId", "value": "" },
+    { "key": "invoiceId", "value": "" }
   ],
   "item": [
     {
@@ -755,6 +756,69 @@
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/orders/{{orderId}}/fulfillment"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Finance (Invoices, Payments & Costing)",
+      "item": [
+        {
+          "name": "Create Invoice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('invoiceId', body.id);",
+                  "  pm.collectionVariables.set('invoiceId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"totalMinor\": 3000000,\n  \"note\": \"فاتورة الطلب بالكامل\"\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/invoices"
+          }
+        },
+        {
+          "name": "Record Deposit Payment (1,000,000)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amountMinor\": 1000000,\n  \"method\": \"cash\",\n  \"note\": \"عربون\"\n}"
+            },
+            "url": "{{baseUrl}}/invoices/{{invoiceId}}/payments"
+          }
+        },
+        {
+          "name": "Add Order Expense (Transport)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"category\": \"transport\",\n  \"amountMinor\": 50000,\n  \"note\": \"نقل للمشغل\"\n}"
+            },
+            "url": "{{baseUrl}}/expenses"
+          }
+        },
+        {
+          "name": "Get Order Finance & Profit",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{orderId}}/finance"
           }
         }
       ]

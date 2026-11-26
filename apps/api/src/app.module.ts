@@ -13,6 +13,7 @@ import { OrdersModule } from './orders/orders.module';
 import { DesignModule } from './design/design.module';
 import { MaterialsModule } from './materials/materials.module';
 import { DeliveryModule } from './delivery/delivery.module';
+import { FinanceModule } from './finance/finance.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { DeliveryModule } from './delivery/delivery.module';
     DesignModule,
     MaterialsModule,
     DeliveryModule,
+    FinanceModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
