@@ -11,6 +11,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { CustomersModule } from './customers/customers.module';
 import { OrdersModule } from './orders/orders.module';
 import { DesignModule } from './design/design.module';
+import { MaterialsModule } from './materials/materials.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { DesignModule } from './design/design.module';
     CustomersModule,
     OrdersModule,
     DesignModule,
+    MaterialsModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

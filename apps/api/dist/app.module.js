@@ -20,6 +20,7 @@ const prisma_module_1 = require("./prisma/prisma.module");
 const customers_module_1 = require("./customers/customers.module");
 const orders_module_1 = require("./orders/orders.module");
 const design_module_1 = require("./design/design.module");
+const materials_module_1 = require("./materials/materials.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -45,6 +46,7 @@ exports.AppModule = AppModule = __decorate([
             customers_module_1.CustomersModule,
             orders_module_1.OrdersModule,
             design_module_1.DesignModule,
+            materials_module_1.MaterialsModule,
         ],
         controllers: [health_controller_1.HealthController],
         providers: [{ provide: core_1.APP_GUARD, useClass: throttler_1.ThrottlerGuard }],

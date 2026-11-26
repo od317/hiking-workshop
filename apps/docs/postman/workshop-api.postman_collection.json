@@ -21,7 +21,8 @@
     { "key": "customerId", "value": "" },
     { "key": "orderId", "value": "" },
     { "key": "attachmentId", "value": "" },
-    { "key": "sampleId", "value": "" }
+    { "key": "sampleId", "value": "" },
+    { "key": "materialId", "value": "" }
   ],
   "item": [
     {
@@ -411,6 +412,96 @@
             "method": "GET",
             "url": "{{baseUrl}}/orders/{{orderId}}/samples"
           }
+        },
+        {
+          "name": "Materials & Inventory",
+          "item": [
+            {
+              "name": "Create Material (Fabric)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200 || pm.response.code === 201) {",
+                      "  const body = pm.response.json();",
+                      "  pm.environment.set('materialId', body.id);",
+                      "  pm.collectionVariables.set('materialId', body.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kind\": \"FABRIC\",\n  \"name\": \"قطن تركي\",\n  \"color\": \"أبيض\",\n  \"unit\": \"متر\",\n  \"unitCostMinor\": 50000\n}"
+                },
+                "url": "{{baseUrl}}/materials"
+              }
+            },
+            {
+              "name": "Stock IN (+100)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"IN\",\n  \"quantity\": 100,\n  \"note\": \"شراء رول جديد\"\n}"
+                },
+                "url": "{{baseUrl}}/materials/{{materialId}}/movements"
+              }
+            },
+            {
+              "name": "List Materials (with currentStock)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/materials"
+              }
+            },
+            {
+              "name": "Reserve Material on Order (-25)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kind\": \"FABRIC\",\n  \"materialId\": \"{{materialId}}\",\n  \"quantity\": 25,\n  \"deductFromStock\": true,\n  \"note\": \"قماش الطلب\"\n}"
+                },
+                "url": "{{baseUrl}}/orders/{{orderId}}/materials"
+              }
+            },
+            {
+              "name": "Add Custom Accessory to Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"kind\": \"ACCESSORY\",\n  \"customName\": \"زر صدفي خاص\",\n  \"customColor\": \"أبيض\",\n  \"quantity\": 200,\n  \"unit\": \"حبة\"\n}"
+                },
+                "url": "{{baseUrl}}/orders/{{orderId}}/materials"
+              }
+            },
+            {
+              "name": "List Order Materials",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/orders/{{orderId}}/materials"
+              }
+            }
+          ]
         }
       ]
     }
