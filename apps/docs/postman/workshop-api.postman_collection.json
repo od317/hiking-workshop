@@ -22,7 +22,11 @@
     { "key": "orderId", "value": "" },
     { "key": "attachmentId", "value": "" },
     { "key": "sampleId", "value": "" },
-    { "key": "materialId", "value": "" }
+    { "key": "materialId", "value": "" },
+    { "key": "orderLineId", "value": "" },
+    { "key": "holdId", "value": "" },
+    { "key": "workshopId", "value": "" },
+    { "key": "batchId", "value": "" }
   ],
   "item": [
     {
@@ -502,6 +506,196 @@
               }
             }
           ]
+        },
+        {
+          "name": "Production (Lines, Cutting & Holds)",
+          "item": [
+            {
+              "name": "Upsert Order Lines",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200 || pm.response.code === 201) {",
+                      "  const body = pm.response.json();",
+                      "  if (Array.isArray(body) && body.length > 0) {",
+                      "    pm.environment.set('orderLineId', body[0].id);",
+                      "    pm.collectionVariables.set('orderLineId', body[0].id);",
+                      "  }",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"lines\": [\n    { \"color\": \"أبيض\", \"size\": \"M\", \"orderedQty\": 50 },\n    { \"color\": \"أبيض\", \"size\": \"L\", \"orderedQty\": 30 }\n  ]\n}"
+                },
+                "url": "{{baseUrl}}/orders/{{orderId}}/lines"
+              }
+            },
+            {
+              "name": "Record Cutting (47 of 50)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"entries\": [\n    { \"orderLineId\": \"{{orderLineId}}\", \"quantity\": 47, \"note\": \"نقص قماش لـ 3 قطع\" }\n  ]\n}"
+                },
+                "url": "{{baseUrl}}/orders/{{orderId}}/cutting"
+              }
+            },
+            {
+              "name": "Create Hold (3 missing)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200 || pm.response.code === 201) {",
+                      "  const body = pm.response.json();",
+                      "  pm.environment.set('holdId', body.id);",
+                      "  pm.collectionVariables.set('holdId', body.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"orderLineId\": \"{{orderLineId}}\",\n  \"stage\": \"CUTTING\",\n  \"quantity\": 3,\n  \"reason\": \"نقص قماش أبيض\"\n}"
+                },
+                "url": "{{baseUrl}}/orders/{{orderId}}/holds"
+              }
+            },
+            {
+              "name": "Get Production Board",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/orders/{{orderId}}/production"
+              }
+            },
+            {
+              "name": "Resolve Hold",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"resolutionNote\": \"وصل القماش وتم قص الـ 3 قطع\"\n}"
+                },
+                "url": "{{baseUrl}}/holds/{{holdId}}/resolve"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Workshops (مشغل & Ledger)",
+      "item": [
+        {
+          "name": "Create Workshop",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('workshopId', body.id);",
+                  "  pm.collectionVariables.set('workshopId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"مشغل النور\",\n  \"phone\": \"0999333444\"\n}"
+            },
+            "url": "{{baseUrl}}/workshops"
+          }
+        },
+        {
+          "name": "Send Cut Pieces to Workshop (40 pcs)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('batchId', body.id);",
+                  "  pm.collectionVariables.set('batchId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderLineId\": \"{{orderLineId}}\",\n  \"workshopId\": \"{{workshopId}}\",\n  \"sentQty\": 40,\n  \"ratePerPieceMinor\": 15000,\n  \"note\": \"دفعة أولى\"\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/workshop-batches"
+          }
+        },
+        {
+          "name": "Receive Pieces from Workshop (25 pcs)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 25,\n  \"note\": \"استلام جزئي\"\n}"
+            },
+            "url": "{{baseUrl}}/workshop-batches/{{batchId}}/receive"
+          }
+        },
+        {
+          "name": "Record Workshop Payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amountMinor\": 200000,\n  \"note\": \"دفعة نقدية\"\n}"
+            },
+            "url": "{{baseUrl}}/workshops/{{workshopId}}/payments"
+          }
+        },
+        {
+          "name": "Get Workshop (Balance & Batches)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/workshops/{{workshopId}}"
+          }
         }
       ]
     }

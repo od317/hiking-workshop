@@ -36,6 +36,10 @@ model User {
   cuttingRecordsCreated CuttingRecord[] @relation("CuttingCreatedBy")
   holdsCreated          Hold[]          @relation("HoldCreatedBy")
   holdsResolved         Hold[]          @relation("HoldResolvedBy")
+  workshopsCreated       Workshop[]             @relation("WorkshopCreatedBy")
+  workshopBatchesCreated WorkshopBatch[]        @relation("WorkshopBatchCreatedBy")
+  workshopReceiptsCreated WorkshopBatchReceipt[] @relation("WorkshopReceiptCreatedBy")
+  workshopLedgerCreated  WorkshopLedgerEntry[]  @relation("WorkshopLedgerCreatedBy")
 }
 
 model Setting {
@@ -148,6 +152,7 @@ model Order {
   materials      OrderMaterial[]
   lines OrderLine[]
   holds Hold[]
+  workshopBatches WorkshopBatch[]
 }
 
 model OrderAttachment {
@@ -327,7 +332,7 @@ model OrderLine {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   version        Int             @default(1)
-
+  workshopBatches WorkshopBatch[]
   @@unique([orderId, color, size])
   @@index([orderId])
 }
@@ -368,4 +373,81 @@ model Hold {
 
   @@index([orderId, status])
   @@index([orderLineId])
+}
+
+enum WorkshopLedgerEntryType {
+  CHARGE
+  PAYMENT
+  ADJUST
+}
+
+model Workshop {
+  id            String                @id @default(uuid()) @db.Uuid
+  name          String
+  phone         String?
+  address       String?
+  note          String?
+  batches       WorkshopBatch[]
+  ledgerEntries WorkshopLedgerEntry[]
+  createdById   String                @db.Uuid
+  createdBy     User                  @relation("WorkshopCreatedBy", fields: [createdById], references: [id])
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  deletedAt     DateTime?
+  version       Int                   @default(1)
+}
+
+model WorkshopBatch {
+  id                String                 @id @default(uuid()) @db.Uuid
+  orderId           String                 @db.Uuid
+  order             Order                  @relation(fields: [orderId], references: [id])
+  orderLineId       String                 @db.Uuid
+  orderLine         OrderLine              @relation(fields: [orderLineId], references: [id])
+  workshopId        String                 @db.Uuid
+  workshop          Workshop               @relation(fields: [workshopId], references: [id])
+  sentQty           Int
+  ratePerPieceMinor Int                    // minor currency units per received piece
+  note              String?
+  receipts          WorkshopBatchReceipt[]
+  ledgerEntries     WorkshopLedgerEntry[]
+  createdById       String                 @db.Uuid
+  createdBy         User                   @relation("WorkshopBatchCreatedBy", fields: [createdById], references: [id])
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  version           Int                    @default(1)
+
+  @@index([orderId])
+  @@index([orderLineId])
+  @@index([workshopId])
+}
+
+model WorkshopBatchReceipt {
+  id          String        @id @default(uuid()) @db.Uuid
+  batchId     String        @db.Uuid
+  batch       WorkshopBatch @relation(fields: [batchId], references: [id])
+  quantity    Int
+  note        String?
+  createdById String        @db.Uuid
+  createdBy   User          @relation("WorkshopReceiptCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime      @default(now())
+
+  @@index([batchId])
+}
+
+model WorkshopLedgerEntry {
+  id          String                  @id @default(uuid()) @db.Uuid
+  workshopId  String                  @db.Uuid
+  workshop    Workshop                @relation(fields: [workshopId], references: [id])
+  type        WorkshopLedgerEntryType
+  // Positive for CHARGE (we owe workshop), negative for PAYMENT (we paid workshop)
+  amountMinor Int
+  batchId     String?                 @db.Uuid
+  batch       WorkshopBatch?          @relation(fields: [batchId], references: [id])
+  note        String?
+  createdById String                  @db.Uuid
+  createdBy   User                    @relation("WorkshopLedgerCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime                @default(now())
+
+  @@index([workshopId])
+  @@index([batchId])
 }
