@@ -116,3 +116,83 @@ export interface ProductionBoard {
   lines: ProductionLine[];
   openHolds: ProductionHold[];
 }
+
+export interface Workshop {
+  id: string;
+  name: string;
+  phone?: string | null;
+  address?: string | null;
+  note?: string | null;
+  balanceMinor: number;
+}
+
+export interface WorkshopBatch {
+  id: string;
+  orderId: string;
+  orderLineId: string;
+  workshopId: string;
+  sentQty: number;
+  receivedQty: number;
+  remainingQty: number;
+  ratePerPieceMinor: number;
+  note?: string | null;
+  workshop: { id: string; name: string };
+  orderLine: { id: string; color: string; size: string };
+}
+
+export interface FulfillmentLine {
+  id: string;
+  color: string;
+  size: string;
+  orderedQty: number;
+  finishedQty: number;
+  qcPassedQty: number;
+  qcRejectedQty: number;
+  readyToDeliverQty: number;
+  deliveredQty: number;
+  returnedQty: number;
+}
+
+export interface FulfillmentSummary {
+  orderId: string;
+  lines: FulfillmentLine[];
+}
+
+export interface OrderInvoice {
+  id: string;
+  totalMinor: number;
+  status: "ISSUED" | "PARTIALLY_PAID" | "PAID" | "VOID";
+  note?: string | null;
+  payments: Array<{
+    id: string;
+    amountMinor: number;
+    method?: string | null;
+    note?: string | null;
+    createdAt: string;
+  }>;
+}
+
+export interface OrderFinance {
+  orderId: string;
+  orderNumber: string;
+  revenue: {
+    totalInvoicedMinor: number;
+    totalPaidMinor: number;
+    customerBalanceDueMinor: number;
+  };
+  costs: {
+    materialCostMinor: number;
+    workshopCostMinor: number;
+    otherExpensesMinor: number;
+    totalCostMinor: number;
+  };
+  profitMinor: number;
+  invoices: OrderInvoice[];
+  expenses: Array<{
+    id: string;
+    category: string;
+    amountMinor: number;
+    note?: string | null;
+    createdAt: string;
+  }>;
+}

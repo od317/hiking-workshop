@@ -126,6 +126,45 @@ export default function OrderDetailScreen() {
             الباترون والعينة
           </Text>
         </Pressable>
+        <Pressable
+          style={{
+            backgroundColor: "#111827",
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 8,
+          }}
+          onPress={() => router.push(`/(app)/orders/${id}/workshops`)}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600" }}>المشغل</Text>
+        </Pressable>
+
+        <Pressable
+          style={{
+            backgroundColor: "#111827",
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 8,
+          }}
+          onPress={() => router.push(`/(app)/orders/${id}/delivery`)}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600" }}>
+            الكوي والتسليم
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={{
+            backgroundColor: "#2563eb",
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 8,
+          }}
+          onPress={() => router.push(`/(app)/orders/${id}/finance`)}
+        >
+          <Text style={{ color: "#fff", fontWeight: "600" }}>
+            المالية والأرباح
+          </Text>
+        </Pressable>
       </View>
 
       <Text style={styles.sectionTitle}>

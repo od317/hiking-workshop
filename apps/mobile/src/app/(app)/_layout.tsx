@@ -18,6 +18,18 @@ export default function AppLayout() {
         name="orders/[id]/production"
         options={{ title: "القص والإنتاج" }}
       />
+      <Stack.Screen
+        name="orders/[id]/workshops"
+        options={{ title: "المشغل والدفعات" }}
+      />
+      <Stack.Screen
+        name="orders/[id]/delivery"
+        options={{ title: "الكوي والتسليم" }}
+      />
+      <Stack.Screen
+        name="orders/[id]/finance"
+        options={{ title: "المالية والأرباح" }}
+      />
     </Stack>
   );
 }
