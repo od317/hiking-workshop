@@ -8,10 +8,12 @@ const common_1 = require("@nestjs/common");
 const nestjs_pino_1 = require("nestjs-pino");
 const helmet_1 = __importDefault(require("helmet"));
 const app_module_1 = require("./app.module");
+const path_1 = require("path");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule, {
         bufferLogs: true,
     });
+    app.useStaticAssets((0, path_1.join)(process.cwd(), 'uploads'), { prefix: '/uploads' });
     app.useLogger(app.get(nestjs_pino_1.Logger));
     app.set('trust proxy', 1);
     app.use((0, helmet_1.default)());

@@ -95,6 +95,7 @@ model Attachment {
   sampleAttachments  SampleAttachment[]
   materialImages      Material[]      @relation("MaterialImage")
   orderMaterialImages OrderMaterial[] @relation("OrderMaterialImage")
+  orderStepAttachments OrderStepAttachment[]
 }
 
 
@@ -189,7 +190,7 @@ model OrderStep {
   doneAt    DateTime?
   updatedAt DateTime        @updatedAt
   version   Int             @default(1)
-
+  attachments OrderStepAttachment[]
   @@unique([orderId, type])
 }
 
@@ -608,4 +609,15 @@ model Expense {
   deletedAt   DateTime?
 
   @@index([orderId])
+}
+
+
+model OrderStepAttachment {
+  orderStepId  String     @db.Uuid
+  attachmentId String     @db.Uuid
+  orderStep    OrderStep  @relation(fields: [orderStepId], references: [id])
+  attachment   Attachment @relation(fields: [attachmentId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@id([orderStepId, attachmentId])
 }

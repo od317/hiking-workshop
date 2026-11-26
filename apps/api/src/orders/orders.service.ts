@@ -94,7 +94,10 @@ export class OrdersService {
       where: { id, deletedAt: null },
       include: {
         customer: true,
-        steps: true,
+        steps: {
+          orderBy: { sortOrder: 'asc' },
+          include: { attachments: { include: { attachment: true } } },
+        },
         attachments: { include: { attachment: true } },
         patterns: {
           where: { deletedAt: null },
