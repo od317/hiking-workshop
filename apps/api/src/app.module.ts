@@ -10,6 +10,7 @@ import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { CustomersModule } from './customers/customers.module';
 import { OrdersModule } from './orders/orders.module';
+import { DesignModule } from './design/design.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { OrdersModule } from './orders/orders.module';
     AuthModule,
     CustomersModule,
     OrdersModule,
+    DesignModule,
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

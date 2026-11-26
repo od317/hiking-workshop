@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateStepDto } from './dto/update-step.dto';
 import { ALL_ORDER_STEPS, findUnmetDependencies } from './order-step-rules';
+import { ReorderStepsDto } from './dto/reorder-steps.dto';
 
 @Injectable()
 export class OrdersService {
@@ -32,7 +33,10 @@ export class OrdersService {
           note: dto.note?.trim(),
           createdById: userId,
           steps: {
-            create: ALL_ORDER_STEPS.map((type) => ({ type })),
+            create: ALL_ORDER_STEPS.map((type, index) => ({
+              type,
+              sortOrder: index + 1,
+            })),
           },
           ...(dto.attachmentIds?.length
             ? {
@@ -46,7 +50,7 @@ export class OrdersService {
         },
         include: {
           customer: true,
-          steps: { orderBy: { type: 'asc' } },
+          steps: { orderBy: { sortOrder: 'asc' } },
           attachments: { include: { attachment: true } },
         },
       });
@@ -79,7 +83,7 @@ export class OrdersService {
       },
       include: {
         customer: { select: { id: true, name: true, phone: true } },
-        steps: true,
+        steps: { orderBy: { sortOrder: 'asc' } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -142,6 +146,30 @@ export class OrdersService {
         doneAt: dto.status === OrderStepStatus.DONE ? now : null,
         version: { increment: 1 },
       },
+    });
+  }
+  async reorderSteps(orderId: string, dto: ReorderStepsDto) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+
+    await this.prisma.$transaction(
+      dto.order.map((type, index) =>
+        this.prisma.orderStep.update({
+          where: { orderId_type: { orderId, type } },
+          data: {
+            sortOrder: index + 1,
+            version: { increment: 1 },
+          },
+        }),
+      ),
+    );
+
+    return this.prisma.orderStep.findMany({
+      where: { orderId },
+      orderBy: { sortOrder: 'asc' },
     });
   }
 }

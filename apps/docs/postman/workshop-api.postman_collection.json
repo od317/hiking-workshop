@@ -20,7 +20,8 @@
     { "key": "refreshToken", "value": "" },
     { "key": "customerId", "value": "" },
     { "key": "orderId", "value": "" },
-    { "key": "attachmentId", "value": "" }
+    { "key": "attachmentId", "value": "" },
+    { "key": "sampleId", "value": "" }
   ],
   "item": [
     {
@@ -315,6 +316,100 @@
               "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
             },
             "url": "{{baseUrl}}/orders/{{orderId}}/steps/CUTTING"
+          }
+        },
+        {
+          "name": "Reorder Steps (CLOTH first)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order\": [\n    \"CLOTH\",\n    \"ACCESSORIES\",\n    \"PATTERN\",\n    \"SAMPLE\",\n    \"CUTTING\",\n    \"WORKSHOP\",\n    \"FINISHING\",\n    \"FINAL_CHECK\",\n    \"DELIVERY\"\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/steps/reorder"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Design (Pattern & Sample)",
+      "item": [
+        {
+          "name": "Create Pattern",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"باترون أولي\"\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/patterns"
+          }
+        },
+        {
+          "name": "List Patterns",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{orderId}}/patterns"
+          }
+        },
+        {
+          "name": "Create Sample",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('sampleId', body.id);",
+                  "  pm.collectionVariables.set('sampleId', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"عينة أولى للزبون\"\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/samples"
+          }
+        },
+        {
+          "name": "Reject Sample",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"REJECTED\",\n  \"note\": \"الكم يحتاج تعديل\"\n}"
+            },
+            "url": "{{baseUrl}}/samples/{{sampleId}}/decision"
+          }
+        },
+        {
+          "name": "Approve Sample",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"APPROVED\",\n  \"note\": \"موافق عليها\"\n}"
+            },
+            "url": "{{baseUrl}}/samples/{{sampleId}}/decision"
+          }
+        },
+        {
+          "name": "List Samples",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/orders/{{orderId}}/samples"
           }
         }
       ]

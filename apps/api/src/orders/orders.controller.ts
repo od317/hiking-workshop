@@ -14,6 +14,7 @@ import { OrderStepType } from '@prisma/client';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateStepDto } from './dto/update-step.dto';
+import { ReorderStepsDto } from './dto/reorder-steps.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -35,6 +36,14 @@ export class OrdersController {
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.orders.findOne(id);
+  }
+
+  @Patch(':id/steps/reorder')
+  reorderSteps(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ReorderStepsDto,
+  ) {
+    return this.orders.reorderSteps(id, dto);
   }
 
   @Patch(':id/steps/:stepType')

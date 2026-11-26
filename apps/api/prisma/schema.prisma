@@ -154,6 +154,7 @@ model OrderStep {
   order     Order           @relation(fields: [orderId], references: [id])
   type      OrderStepType
   status    OrderStepStatus @default(NOT_STARTED)
+  sortOrder Int             @default(0)
   note      String?
   startedAt DateTime?
   doneAt    DateTime?
