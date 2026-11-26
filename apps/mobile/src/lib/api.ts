@@ -1,0 +1,57 @@
+export type OrderStepType =
+  | "PATTERN"
+  | "SAMPLE"
+  | "ACCESSORIES"
+  | "CLOTH"
+  | "CUTTING"
+  | "WORKSHOP"
+  | "FINISHING"
+  | "FINAL_CHECK"
+  | "DELIVERY";
+
+export type OrderStepStatus =
+  "NOT_STARTED" | "IN_PROGRESS" | "DONE" | "BLOCKED" | "SKIPPED";
+
+export interface Customer {
+  id: string;
+  name: string;
+  phone?: string | null;
+  note?: string | null;
+}
+
+export interface OrderStep {
+  id: string;
+  orderId: string;
+  type: OrderStepType;
+  status: OrderStepStatus;
+  sortOrder: number;
+  note?: string | null;
+}
+
+export interface OrderSummary {
+  id: string;
+  orderNumber: string;
+  title?: string | null;
+  note?: string | null;
+  createdAt: string;
+  customer: Pick<Customer, "id" | "name" | "phone">;
+  steps: OrderStep[];
+}
+
+export interface OrderDetail extends OrderSummary {
+  customer: Customer;
+  patterns: Array<{
+    id: string;
+    versionNum: number;
+    note?: string | null;
+    createdAt: string;
+  }>;
+  samples: Array<{
+    id: string;
+    attemptNum: number;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    note?: string | null;
+    decisionNote?: string | null;
+    createdAt: string;
+  }>;
+}
